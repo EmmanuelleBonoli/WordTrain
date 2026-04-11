@@ -4,11 +4,13 @@ import 'package:word_riders/features/ui/styles/app_theme.dart';
 class GameInputCartridge extends StatelessWidget {
   final String currentInput;
   final VoidCallback onBackspace;
+  final bool isSuccessFlash;
 
   const GameInputCartridge({
     super.key,
     required this.currentInput,
     required this.onBackspace,
+    this.isSuccessFlash = false,
   });
 
   @override
@@ -32,7 +34,9 @@ class GameInputCartridge extends StatelessWidget {
         padding: const EdgeInsets.all(4.0),
         child: Container(
            decoration: BoxDecoration(
-            color: AppTheme.coinBorderDark, 
+            color: isSuccessFlash 
+                ? AppTheme.btnValidate.withValues(alpha: 0.6) 
+                : AppTheme.coinBorderDark, 
             borderRadius: BorderRadius.circular(24.5),
            ),
            padding: const EdgeInsets.all(1.5),

@@ -13,6 +13,7 @@ class GameInputArea extends StatelessWidget {
   final VoidCallback onValidate;
   final VoidCallback onShuffle;
   final Function(String) onLetterTap;
+  final bool isSuccessFlash;
 
   const GameInputArea({
     super.key,
@@ -23,6 +24,7 @@ class GameInputArea extends StatelessWidget {
     required this.onValidate,
     required this.onShuffle,
     required this.onLetterTap,
+    this.isSuccessFlash = false,
   });
 
   @override
@@ -109,6 +111,7 @@ class GameInputArea extends StatelessWidget {
                        child: GameInputCartridge(
                          currentInput: currentInput,
                          onBackspace: onBackspace,
+                         isSuccessFlash: isSuccessFlash,
                        ),
                      ),
 
