@@ -63,6 +63,9 @@ class GameController extends ChangeNotifier with WidgetsBindingObserver {
   String? _feedbackMessage;
   String? get feedbackMessage => _feedbackMessage;
 
+  bool _isSuccessFlash = false;
+  bool get isSuccessFlash => _isSuccessFlash;
+
   GameController({
     required this.isCampaign, 
     required this.locale, 
@@ -218,7 +221,7 @@ class GameController extends ChangeNotifier with WidgetsBindingObserver {
 
 
   void onLetterTap(String letter) {
-    if (_status != GameStatus.playing) return;
+    if (_status != GameStatus.playing || _isSuccessFlash) return;
 
     if (_currentInput.length < 20) { 
       AudioService().playSfx(AudioData.sfxButtonPress);
@@ -228,7 +231,7 @@ class GameController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void onBackspace() {
-    if (_status != GameStatus.playing) return;
+    if (_status != GameStatus.playing || _isSuccessFlash) return;
 
     if (_currentInput.isNotEmpty) {
       AudioService().playSfx(AudioData.sfxButtonPress);
@@ -238,7 +241,7 @@ class GameController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void onShuffle() {
-    if (_status != GameStatus.playing) return;
+    if (_status != GameStatus.playing || _isSuccessFlash) return;
     
     _shuffledLetters.shuffle();
     notifyListeners();
@@ -305,7 +308,16 @@ class GameController extends ChangeNotifier with WidgetsBindingObserver {
         _handleWin();
       }
       
-      clearInput();
+      _isSuccessFlash = true;
+      notifyListeners();
+
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!_isDisposed) {
+          _isSuccessFlash = false;
+          clearInput();
+        }
+      });
+      
       return true;
     }
     
