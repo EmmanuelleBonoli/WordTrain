@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:word_riders/features/ui/styles/app_theme.dart';
 import 'package:word_riders/features/ui/widgets/common/button/bouncing_scale_button.dart';
 import 'package:word_riders/features/ui/widgets/common/button/premium_round_button.dart';
+import 'package:word_riders/features/ui/widgets/game/game_timeline.dart';
+import 'package:word_riders/features/ui/widgets/game/input/game_coin_letter.dart';
+import 'package:word_riders/features/ui/widgets/game/input/game_input_cartridge.dart';
 
 // Données de démo pour l'étape 1 : mot et tuiles par langue.
 class _DemoData {
@@ -417,7 +420,11 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                   left: 0,
                   right: btnSize + cartGap,
                   height: 60,
-                  child: _buildDemoCartridge(),
+                  child: GameInputCartridge(
+                    currentInput: _demoInput,
+                    onBackspace: () {},
+                    isSuccessFlash: _demoValidated,
+                  ),
                 ),
 
                 // --- Bouton Valider (PremiumRoundButton vert — identique au vrai jeu) ---
@@ -452,7 +459,10 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                   return Positioned(
                     left: tileLeft,
                     top: tileTop,
-                    child: _buildCoinLetter(_demoData.tiles[i]),
+                    child: GameCoinLetter(
+                      letter: _demoData.tiles[i],
+                      size: letterSize,
+                    ),
                   );
                 }),
 
@@ -485,129 +495,6 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     );
   }
 
-  /// Lettre circulaire — style identique à GameLetterGrid._buildRingLetter.
-  Widget _buildCoinLetter(String letter) {
-    const double size = 64.0;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.coinBorderDark,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  blurRadius: 16,
-                  spreadRadius: 4,
-                ),
-                const BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(1.5),
-            child: Container(
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [AppTheme.coinRimTop, AppTheme.coinRimBottom],
-                ),
-              ),
-              padding: const EdgeInsets.all(3.0),
-              child: Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppTheme.coinBorderDark,
-                ),
-                padding: const EdgeInsets.all(1.2),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppTheme.levelSignFace,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    letter,
-                    style: const TextStyle(
-                      fontFamily: 'Round',
-                      fontSize: 28.0,
-                      fontWeight: FontWeight.w900,
-                      color: AppTheme.coinBorderDark,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDemoCartridge() {
-    return Container(
-      height: 60,
-      decoration: BoxDecoration(
-        color: AppTheme.coinBorderDark,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
-        ],
-      ),
-      padding: const EdgeInsets.all(1.5),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppTheme.coinRimTop, AppTheme.coinRimBottom],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          borderRadius: BorderRadius.circular(28.5),
-        ),
-        padding: const EdgeInsets.all(4),
-        child: Container(
-          decoration: BoxDecoration(
-            // Flash vert au moment de la validation du mot
-            color: _demoValidated
-                ? AppTheme.btnValidate.withValues(alpha: 0.5)
-                : AppTheme.coinBorderDark,
-            borderRadius: BorderRadius.circular(24.5),
-          ),
-          padding: const EdgeInsets.all(1.5),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppTheme.inputCartridgeFill,
-              borderRadius: BorderRadius.circular(23),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              _demoInput,
-              style: const TextStyle(
-                fontFamily: 'Round',
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 3.0,
-                shadows: [
-                  Shadow(
-                    color: Colors.black26,
-                    blurRadius: 2,
-                    offset: Offset(1, 1),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildGhostHand() {
     return Container(
@@ -696,82 +583,15 @@ class _TutorialOverlayState extends State<TutorialOverlay>
 
   Widget _buildRaceStep() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: AnimatedBuilder(
         animation: _animController,
-        builder: (context, _) => _buildRaceTrack(
+        builder: (context, _) => GameTimeline(
           rabbitProgress: _rabbitProgress.value,
           foxProgress: _foxProgress.value,
+          showFox: true,
+          separateTracks: true,
         ),
-      ),
-    );
-  }
-
-  Widget _buildRaceTrack({
-    required double rabbitProgress,
-    required double foxProgress,
-  }) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const iconSize = 56.0;
-        final usableWidth =
-            (constraints.maxWidth - iconSize).clamp(0.0, double.infinity);
-        return SizedBox(
-          height: 140,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildTrackRow(
-                imagePath: 'assets/images/characters/rabbit_head2.png',
-                position: usableWidth * rabbitProgress,
-                iconSize: iconSize,
-              ),
-              _buildTrackRow(
-                imagePath: 'assets/images/characters/fox_head2.png',
-                position: usableWidth * foxProgress,
-                iconSize: iconSize,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTrackRow({
-    required String imagePath,
-    required double position,
-    required double iconSize,
-  }) {
-    return SizedBox(
-      height: 60,
-      child: Stack(
-        alignment: Alignment.centerLeft,
-        children: [
-          Container(
-            height: 10,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppTheme.tileFace,
-              borderRadius: BorderRadius.circular(5),
-              border: Border.all(color: AppTheme.brown, width: 2),
-            ),
-          ),
-          Positioned(
-            right: 0,
-            child: Image.asset(
-              'assets/images/characters/finish_flag2.png',
-              width: iconSize, height: iconSize, fit: BoxFit.contain,
-            ),
-          ),
-          Positioned(
-            left: position,
-            child: Image.asset(
-              imagePath,
-              width: iconSize, height: iconSize, fit: BoxFit.contain,
-            ),
-          ),
-        ],
       ),
     );
   }

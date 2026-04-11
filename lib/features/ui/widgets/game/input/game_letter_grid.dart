@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:word_riders/features/ui/styles/app_theme.dart';
 import 'package:word_riders/features/ui/widgets/common/button/bouncing_scale_button.dart';
+import 'package:word_riders/features/ui/widgets/game/input/game_coin_letter.dart';
 
 class GameLetterGrid extends StatelessWidget {
   final List<String> shuffledLetters;
@@ -56,61 +56,10 @@ class GameLetterGrid extends StatelessWidget {
              child: BouncingScaleButton(
                onTap: () => onLetterTap(letter),
                showShadow: false,
-               child: _buildRingLetter(letter, letterSize),
+               child: GameCoinLetter(letter: letter, size: letterSize),
              ),
            );
         }),
-      ),
-    );
-  }
-
-  Widget _buildRingLetter(String letter, double size) {
-    return SizedBox(
-      width: size, height: size,
-      child: Stack(
-         alignment: Alignment.center,
-         children: [
-            // 1. Bordure Extérieure Sombre
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppTheme.coinBorderDark,
-                boxShadow: [
-                   // Fort Halo blanc
-                   BoxShadow(color: Colors.white.withValues(alpha: 0.75), blurRadius: 16, spreadRadius: 4), 
-                   const BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0,2))
-                ],
-              ),
-              padding: const EdgeInsets.all(1.5),
-              child: Container(
-                 // 2. Bord (Dégradé)
-                 decoration: const BoxDecoration(
-                   shape: BoxShape.circle,
-                   gradient: LinearGradient(colors: [AppTheme.coinRimTop, AppTheme.coinRimBottom]),
-                 ),
-                 padding: const EdgeInsets.all(3.0),
-                 child: Container(
-                    // 3. Bordure Intérieure Sombre
-                    decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.coinBorderDark),
-                    padding: const EdgeInsets.all(1.2),
-                    child: Container(
-                      // 4. Face
-                       decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.levelSignFace),
-                       alignment: Alignment.center,
-                       child: Text(
-                         letter,
-                         style: TextStyle(
-                           fontFamily: AppTheme.fontFamily,
-                           fontSize: size * 0.45,
-                           fontWeight: FontWeight.w900,
-                           color: AppTheme.coinBorderDark,
-                         ),
-                       ),
-                    ),
-                 ),
-              ),
-            ),
-         ],
       ),
     );
   }
