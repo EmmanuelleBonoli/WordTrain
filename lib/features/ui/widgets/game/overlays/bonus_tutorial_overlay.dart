@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:word_riders/features/ui/styles/app_theme.dart';
 import 'package:word_riders/features/ui/widgets/common/button/bouncing_scale_button.dart';
 import 'package:word_riders/features/ui/widgets/common/button/premium_round_button.dart';
+import 'package:word_riders/features/ui/widgets/game/game_timeline_track.dart';
+import 'package:word_riders/features/ui/widgets/game/input/game_coin_letter.dart';
 
 /// Types de bonus disponibles dans le jeu.
 enum BonusType { extraLetter, doubleDistance, freezeRival }
@@ -270,7 +272,7 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
                   for (final l in ['W', 'O', 'R'])
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: _buildSmallCoin(l, highlight: false),
+                      child: GameCoinLetter(letter: l, size: 44.0, highlight: false, showHalo: false),
                     ),
                 ],
               ),
@@ -282,7 +284,7 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
                   for (final l in ['D', 'S', 'E'])
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: _buildSmallCoin(l, highlight: false),
+                      child: GameCoinLetter(letter: l, size: 44.0, highlight: false, showHalo: false),
                     ),
                   // Voyelle supplémentaire (slide in depuis le bas)
                   Transform.translate(
@@ -291,7 +293,7 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
                       opacity: letterOpacity,
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4),
-                        child: _buildSmallCoin('U', highlight: true),
+                        child: GameCoinLetter(letter: 'U', size: 44.0, highlight: true, showHalo: false),
                       ),
                     ),
                   ),
@@ -311,16 +313,9 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
   // ---------------------------------------------------------------------------
 
   Widget _buildDoubleDistanceDemo() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        const double flagSize = 40.0;
-        // On laisse 36px pour le label ×1 / ×2
-        const double labelW = 36.0;
-        final double trackW = w - labelW;
-        final double maxPos = (trackW - flagSize).clamp(0.0, double.infinity);
+    const double labelW = 36.0;
 
-        return AnimatedBuilder(
+    return AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
             final v = _controller.value;
@@ -332,16 +327,16 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
 
             // Lapin "normal" (track du haut) : v=0.20–0.55 → avance sur 25%
             final double normalPos = v >= 0.20 && v < 0.55
-                ? maxPos * ((v - 0.20) / 0.35).clamp(0.0, 1.0) * 0.25
+                ? ((v - 0.20) / 0.35).clamp(0.0, 1.0) * 0.25
                 : v >= 0.55
-                    ? maxPos * 0.25
+                    ? 0.25
                     : 0.0;
 
             // Lapin "×2" (track du bas) : v=0.20–0.55 → avance sur 75%
             final double boostedPos = v >= 0.20 && v < 0.55
-                ? maxPos * ((v - 0.20) / 0.35).clamp(0.0, 1.0) * 0.75
+                ? ((v - 0.20) / 0.35).clamp(0.0, 1.0) * 0.75
                 : v >= 0.55
-                    ? maxPos * 0.75
+                    ? 0.75
                     : 0.0;
 
             final bool showBadge = v >= 0.20;
@@ -368,12 +363,9 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
                         ),
                       ),
                       Expanded(
-                        child: _buildLabeledTrack(
-                          position: normalPos,
-                          maxPos: maxPos,
-                          flagSize: flagSize,
+                        child: GameTimelineTrack(
+                          progress: normalPos,
                           imagePath: 'assets/images/characters/rabbit_head2.png',
-                          showBadge: false,
                           highlighted: false,
                         ),
                       ),
@@ -390,13 +382,11 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
                         ),
                       ),
                       Expanded(
-                        child: _buildLabeledTrack(
-                          position: boostedPos,
-                          maxPos: maxPos,
-                          flagSize: flagSize,
+                        child: GameTimelineTrack(
+                          progress: boostedPos,
                           imagePath: 'assets/images/characters/rabbit_head2.png',
-                          showBadge: showBadge,
                           highlighted: true,
+                          badgeText: showBadge ? '×2' : null,
                         ),
                       ),
                     ],
@@ -406,8 +396,6 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
             );
           },
         );
-      },
-    );
   }
 
   // ---------------------------------------------------------------------------
@@ -417,13 +405,7 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
   // ---------------------------------------------------------------------------
 
   Widget _buildFreezeRivalDemo() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        const double flagSize = 40.0;
-        final double maxPos = (w - flagSize).clamp(0.0, double.infinity);
-
-        return AnimatedBuilder(
+    return AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
             final v = _controller.value;
@@ -441,18 +423,18 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
 
             if (v >= 0.05 && v < 0.35) {
               final t = (v - 0.05) / 0.30;
-              rabbitLeft = maxPos * t * 0.28;
-              foxLeft = maxPos * t * 0.26;
+              rabbitLeft = t * 0.28;
+              foxLeft = t * 0.26;
             } else if (v >= 0.35 && v < 0.90) {
               // Fox figé à sa position au moment du gel
-              foxLeft = maxPos * 0.26;
+              foxLeft = 0.26;
               frozenOpacity = ((v - 0.35) / 0.12).clamp(0.0, 1.0);
               // Lapin continue jusqu'à 85%
-              rabbitLeft = maxPos * (0.28 + ((v - 0.35) / 0.55) * 0.57);
+              rabbitLeft = 0.28 + ((v - 0.35) / 0.55) * 0.57;
             } else if (v >= 0.90) {
-              foxLeft = maxPos * 0.26;
+              foxLeft = 0.26;
               frozenOpacity = 1.0;
-              rabbitLeft = maxPos * 0.85;
+              rabbitLeft = 0.85;
             }
 
             final double globalOpacity = v > 0.92 ? (1 - v) / 0.08 : 1.0;
@@ -470,18 +452,15 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
                   ),
                   const SizedBox(height: 20),
                   // Track lapin
-                  _buildFreezeTrackRow(
+                  GameTimelineTrack(
+                    progress: rabbitLeft,
                     imagePath: 'assets/images/characters/rabbit_head2.png',
-                    position: rabbitLeft,
-                    flagSize: flagSize,
-                    frozenOpacity: 0.0,
                   ),
                   const SizedBox(height: 12),
                   // Track renard (avec effet gel)
-                  _buildFreezeTrackRow(
+                  GameTimelineTrack(
+                    progress: foxLeft,
                     imagePath: 'assets/images/characters/fox_head2.png',
-                    position: foxLeft,
-                    flagSize: flagSize,
                     frozenOpacity: frozenOpacity,
                   ),
                 ],
@@ -489,8 +468,6 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
             );
           },
         );
-      },
-    );
   }
 
   // ---------------------------------------------------------------------------
@@ -534,136 +511,7 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
     );
   }
 
-  /// Petite pièce circulaire pour la rangée de lettres (Extra Letter).
-  Widget _buildSmallCoin(String letter, {required bool highlight}) {
-    const double size = 44.0;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: AppTheme.coinBorderDark,
-        boxShadow: [
-          if (highlight)
-            BoxShadow(
-              color: Colors.orange.withValues(alpha: 0.7),
-              blurRadius: 12,
-              spreadRadius: 3,
-            ),
-          const BoxShadow(color: Colors.black26, blurRadius: 3, offset: Offset(0, 2)),
-        ],
-      ),
-      padding: const EdgeInsets.all(1.5),
-      child: Container(
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [AppTheme.coinRimTop, AppTheme.coinRimBottom],
-          ),
-        ),
-        padding: const EdgeInsets.all(2.5),
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: highlight ? Colors.orange.withValues(alpha: 0.3) : AppTheme.coinBorderDark,
-          ),
-          padding: const EdgeInsets.all(1.0),
-          child: Container(
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.levelSignFace,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              letter,
-              style: TextStyle(
-                fontFamily: 'Round',
-                fontSize: 17,
-                fontWeight: FontWeight.w900,
-                color: highlight ? Colors.deepOrange : AppTheme.coinBorderDark,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  /// Track avec drapeau et personnage (utilisé pour Double Distance).
-  Widget _buildLabeledTrack({
-    required double position,
-    required double maxPos,
-    required double flagSize,
-    required String imagePath,
-    required bool showBadge,
-    required bool highlighted,
-  }) {
-    return SizedBox(
-      height: 52,
-      child: Stack(
-        alignment: Alignment.centerLeft,
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: Container(
-              height: 8,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppTheme.tileFace,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: highlighted ? Colors.blueAccent : AppTheme.brown,
-                  width: highlighted ? 2.5 : 2,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 0, top: 0, bottom: 0,
-            child: Center(
-              child: Image.asset(
-                'assets/images/characters/finish_flag2.png',
-                width: flagSize, height: flagSize, fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          Positioned(
-            left: position, top: 0, bottom: 0,
-            child: Center(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Image.asset(imagePath, width: flagSize, height: flagSize, fit: BoxFit.contain),
-                  if (showBadge)
-                    Positioned(
-                      top: 0,
-                      right: -4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.white, width: 1),
-                        ),
-                        child: const Text(
-                          '×2',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Round',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   /// Label ×1 / ×2 stylisé à gauche de la track Double Distance.
   Widget _buildTrackLabel(String text, {required bool active}) {
@@ -681,99 +529,6 @@ class _BonusTutorialOverlayState extends State<BonusTutorialOverlay>
           fontWeight: FontWeight.w900,
           color: active ? Colors.white : Colors.white60,
         ),
-      ),
-    );
-  }
-
-  /// Track avec effet de gel pour la démo Freeze Rival.
-  Widget _buildFreezeTrackRow({
-    required String imagePath,
-    required double position,
-    required double flagSize,
-    required double frozenOpacity,
-  }) {
-    return SizedBox(
-      height: 52,
-      child: Stack(
-        alignment: Alignment.centerLeft,
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: Container(
-              height: 8,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: frozenOpacity > 0.1
-                    ? Color.lerp(AppTheme.tileFace, Colors.cyan.shade100, frozenOpacity)!
-                    : AppTheme.tileFace,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: AppTheme.brown, width: 2),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 0, top: 0, bottom: 0,
-            child: Center(
-              child: Image.asset(
-                'assets/images/characters/finish_flag2.png',
-                width: flagSize, height: flagSize, fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          Positioned(
-            left: position, top: 0, bottom: 0,
-            child: Center(
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  // Personnage (s'assombrit légèrement si gelé)
-                  Opacity(
-                    opacity: 1.0 - frozenOpacity * 0.3,
-                    child: Image.asset(
-                      imagePath,
-                      width: flagSize, height: flagSize, fit: BoxFit.contain,
-                    ),
-                  ),
-                  // Overlay cyan progressif
-                  if (frozenOpacity > 0.01)
-                    Opacity(
-                      opacity: frozenOpacity * 0.5,
-                      child: Container(
-                        width: flagSize,
-                        height: flagSize,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.cyan.shade200,
-                        ),
-                      ),
-                    ),
-                  // Icône ❄ en haut à droite du personnage
-                  if (frozenOpacity > 0.05)
-                    Positioned(
-                      top: -4,
-                      right: -4,
-                      child: Opacity(
-                        opacity: frozenOpacity,
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: const BoxDecoration(
-                            color: Colors.cyan,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.ac_unit_rounded,
-                            color: Colors.white,
-                            size: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
